@@ -2,6 +2,7 @@ package com.Order.controller;
 
 
 import com.Order.exception.ResourceNotFoundException;
+import com.Order.feign.CartInterface;
 import com.Order.model.Order;
 import com.Order.response.ApiResponse;
 import com.Order.service.IOrderService;
@@ -16,12 +17,15 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final IOrderService orderService;
+    private final CartInterface cartInterface;
 
     @PostMapping("create")
     public ResponseEntity<ApiResponse> createOrder(@RequestParam Long cartId) {
 
         try {
             Order order = orderService.placeOrder(cartId);
+//            cartInterface.clearCart(cartId);
+
             return ResponseEntity.ok(new ApiResponse( "Order Placed Successfully", order));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
@@ -38,12 +42,12 @@ public class OrderController {
 //        }
 //    }
 
-    @GetMapping("getOrder/{orderId}")
-    public ResponseEntity<ApiResponse> getOrder(@PathVariable Long orderId){
+    @GetMapping("getOrder")
+    public ResponseEntity<Order> getOrder(@RequestParam Long orderId){
         try{
-            return ResponseEntity.ok(new ApiResponse("Order found successfully", orderService.getOrder(orderId)));
+            return ResponseEntity.ok(orderService.getOrder(orderId));
         }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body( null);
         }
     }
 

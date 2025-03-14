@@ -4,12 +4,14 @@ package com.Order.service;
 import com.Order.enums.OrderStatus;
 import com.Order.exception.ResourceNotFoundException;
 import com.Order.feign.CartInterface;
+import com.Order.feign.InventoryInterface;
 import com.Order.model.Cart;
 import com.Order.model.Order;
 import com.Order.model.OrderItem;
 import com.Order.repository.OrderItemRepository;
 import com.Order.repository.OrderRepository;
 import com.Order.response.ApiResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class OrderService implements IOrderService {
     private  final ModelMapper modelMapper;
     private  final OrderItemRepository orderItemRepository;
     private final CartInterface cartInterface;
+    private final InventoryInterface inventoryInterface;
 
 
 
@@ -36,8 +39,6 @@ public class OrderService implements IOrderService {
         Cart cart = cartInterface.getCart(cartId).getBody();
 
         assert cart != null;
-
-        System.out.println(cart);
 
         Order order = new Order();
         order.setOrderDate(LocalDate.now());
@@ -58,7 +59,8 @@ public class OrderService implements IOrderService {
 
             return orderItemRepository.save(orderItem);    }).toList();
         order.setOrderItems(orderItems);
-        cartInterface.clearCart(cart.getId());
+
+        inventoryInterface.createReservation(order.getId());
 
         return order;
     }
@@ -91,4 +93,5 @@ public class OrderService implements IOrderService {
         orderRepository.save(order);
 
     }
+
 }
