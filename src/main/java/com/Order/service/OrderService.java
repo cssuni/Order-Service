@@ -11,6 +11,7 @@ import com.Order.model.OrderItem;
 import com.Order.repository.OrderItemRepository;
 import com.Order.repository.OrderRepository;
 import com.Order.response.ApiResponse;
+import com.Order.service.redis.RedisService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -30,6 +31,7 @@ public class OrderService implements IOrderService {
     private  final OrderItemRepository orderItemRepository;
     private final CartInterface cartInterface;
     private final InventoryInterface inventoryInterface;
+    private final RedisService redisService;
 
 
 
@@ -73,15 +75,29 @@ public class OrderService implements IOrderService {
 
     @Override
     public Order getOrder(Long orderId) {
-        return orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order Not Found"));
+
+        System.out.println("Get Order was called");
+
+        Order order = redisService.getOrderFromRedis(orderId);
+
+
+
+        if(order == null)  return orderRepository.findById(orderId).stream()
+                .map(redisService::saveOrderInRedis).findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Order Not Found"));
+
+        return order;
     }
 
 
     @Override
     public String orderStatus(Long orderId) {
 
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order Not Found"));
-
+        Order order = redisService.getOrderFromRedis(orderId);
+        if(order == null)  return orderRepository.findById(orderId).stream()
+                .map(redisService::saveOrderInRedis).findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Order Not Found"))
+                .getOrderStatus().toString();
         return order.getOrderStatus().toString();
     }
 
@@ -90,7 +106,7 @@ public class OrderService implements IOrderService {
 
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order Not Found"));
         order.setOrderStatus(OrderStatus.CANCELLED);
-        orderRepository.save(order);
+        redisService.saveOrderInRedis(orderRepository.save(order));
 
     }
 

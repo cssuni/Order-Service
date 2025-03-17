@@ -15,13 +15,15 @@ public class LoggingAspect {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingAspect.class);
 
     @Before("execution(* com.Order.controller.OrderController.*(..)) ||" +
-            "execution(* com.Order.service.OrderService.*(..)) " )
+            "execution(* com.Order.service.OrderService.*(..)) ||" +
+            "execution(* com.Order.service.redis.RedisService.*(..))" )
     public void logBeforeMethodCall(JoinPoint jp) {
         LOGGER.info("{} Method Called", jp.getSignature().getName());
     }
 
     @After("execution(* com.Order.controller.OrderController.*(..)) ||" +
-            "execution(* com.Order.service.OrderService.*(..)) " )
+            "execution(* com.Order.service.OrderService.*(..)) ||" +
+            "execution(* com.Order.service.redis.RedisService.*(..)) " )
     public void logMethodExecuted(JoinPoint jp) {
         LOGGER.info("{} Method Completed", jp.getSignature().getName());
     }
