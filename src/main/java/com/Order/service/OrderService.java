@@ -82,8 +82,8 @@ public class OrderService implements IOrderService {
 
 
 
-        if(order == null)  return orderRepository.findById(orderId).stream()
-                .map(redisService::saveOrderInRedis).findFirst()
+        if(order == null)  return orderRepository.findById(orderId)
+                .map(redisService::saveOrderInRedis)
                 .orElseThrow(() -> new ResourceNotFoundException("Order Not Found"));
 
         return order;
